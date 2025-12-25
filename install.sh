@@ -1,4 +1,4 @@
-sudo su
+
 # Display block devices
 echo "Available block devices:"
 lsblk -o NAME,SIZE,TYPE,MOUNTPOINT
