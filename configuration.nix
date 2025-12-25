@@ -77,7 +77,6 @@
   services.automatic-timezoned.enable = true;
   zramSwap.enable = true;
   zramSwap.algorithm = "zstd";
-  services.desktopManager.cosmic.enable = true;
   services.flatpak.enable = true;
   
   
@@ -86,7 +85,6 @@
     fish     = { enable = true; };
     mosh     = { enable = true; };
     tmux     = { enable = true; };
-    ghostty  = { enable = true; };
      };
 
   environment.sessionVariables = {
