@@ -43,7 +43,7 @@ sgdisk --zap-all "$disk"
 parted -s "$disk" mklabel gpt
 parted -s "$disk" mkpart ESP fat32 1MiB 1000MiB
 parted -s "$disk" set 1 esp on
-parted -s "$disk" mkpart primary btrfs 1000MiB 100%
+parted -s "$disk" mkpart primary btrfs 1000MiB 90%
 
 # Inform kernel of partition changes and wait
 partprobe "$disk"
