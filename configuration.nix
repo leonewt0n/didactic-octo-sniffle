@@ -129,6 +129,7 @@
     shell = pkgs.fish;
     description  = "nix user";
     extraGroups  = [ "networkmanager" "wheel" "docker" "video" "seat" "audio" "libvirtd"];
+    password     = "steamos";
   };
 
   #################
