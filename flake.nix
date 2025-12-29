@@ -1,21 +1,32 @@
 {
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  inputs.lanzaboote.url = "github:nix-community/lanzaboote/v1.0.0"";
-  inputs.chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
-  inputs.jovian = {
-    url = "github:Jovian-Experiments/Jovian-NixOS";
-    inputs.nixpkgs.follows = "nixpkgs";
-  };
- 
-  outputs = { self, nixpkgs, chaotic, lanzaboote, ... }: {
-    nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      modules = [
-        ./configuration.nix
-        chaotic.nixosModules.default
-        lanzaboote.nixosModules.lanzaboote
+  description = "A SecureBoot-enabled NixOS configurations";
 
-        ({ pkgs, lib, ... }: {
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
+    #nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0";
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote/v1.0.0";
+
+      # Optional but recommended to limit the size of your system closure.
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
+  outputs = { self, nixpkgs, lanzaboote, determinate, ...}: {
+    nixosConfigurations = {
+      nixos = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+
+        modules = [
+          # This is not a complete NixOS configuration and you need to reference
+          # your normal configuration here.
+          ./configuration.nix
+          determinate.nixosModules.default
+
+          lanzaboote.nixosModules.lanzaboote
+
+          ({ pkgs, lib, ... }: {
 
             environment.systemPackages = [
               # For debugging and troubleshooting Secure Boot.
@@ -33,7 +44,8 @@
               pkiBundle = "/var/lib/sbctl";
             };
           })
-      ];
+        ];
+      };
     };
   };
 }
