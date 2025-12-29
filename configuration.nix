@@ -20,7 +20,7 @@
   #hardware.amdgpu.initrd.enable = false;
 
   boot.kernelParams = [ "quiet" ];
-  #boot.kernelPackages = pkgs.linuxPackages_cachyos;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernel.sysctl = {
     "kernel.split_lock_mitigate" = 0;
     "kernel.nmi_watchdog"        = 0;
@@ -36,6 +36,9 @@
   boot.consoleLogLevel     = 0;
   systemd.settings.Manager = {DefaultTimeoutStopSec="5s";};
 
+  #Determinate Linux
+
+  
   ################
   # FileSystems  #
   ################
@@ -78,6 +81,20 @@
   zramSwap.enable = true;
   zramSwap.algorithm = "zstd";
   services.flatpak.enable = true;
+  services.fwupd.enable = true;
+  documentation.nixos.enable = false;  
+  environment.systemPackages = [
+    pkgs.helix
+    pkgs.btop
+    pkgs.ghostty
+    pkgs.git
+    pkgs.gh
+    pkgs.fish
+    pkgs.dua
+    pkgs.bat
+    pkgs.lsd
+    pkgs.zoxide
+  ];
   
   
   programs = {
@@ -109,9 +126,9 @@
   ###############
   users.users.nix = {
     isNormalUser = true;
+    shell = pkgs.fish;
     description  = "nix user";
     extraGroups  = [ "networkmanager" "wheel" "docker" "video" "seat" "audio" "libvirtd"];
-    password     = "steamos";
   };
 
   #################
@@ -128,5 +145,5 @@
   ########################
   # System State Version #
   ########################
-  system.stateVersion = "25.11";
+  system.stateVersion = "26.05";
 }
