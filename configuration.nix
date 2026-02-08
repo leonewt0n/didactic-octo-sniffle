@@ -33,11 +33,12 @@
   };
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernelParams = [ "quiet" "zswap.enabled=1" "zswap.compressor=zstd" "zswap.zpool=zsmalloc" "usbcore.autosuspend=-1" "i915.force_probe=!7d67"  "xe.force_probe=7d67" "xe.enable_psr=0" ];
+  boot.kernelParams = [ "quiet" "zswap.enabled=1" "zswap.compressor=zstd" "zswap.zpool=zsmalloc" "usbcore.autosuspend=-1" "i915.force_probe=!7d67" "enable_guc=3" "xe.force_probe=7d67" "xe.enable_psr=0" "pcie_aspm.policy=performance" "intel_idle.max_cstate=1" ];
    boot.kernel.sysctl = {
     "kernel.split_lock_mitigate" = 0;
     "kernel.nmi_watchdog" = 0;
     "vm.swappiness" = 100;
+    "vm.max_map_count" = 2147483642;
   };
 
   boot.initrd = {
