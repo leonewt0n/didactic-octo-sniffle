@@ -23,7 +23,7 @@
       timeout = 0;
     };
 
-    kernelPackages = pkgs.linuxPackages_latest;
+    #kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
       "quiet"
       "zswap.enabled=1"
@@ -31,7 +31,7 @@
       "zswap.zpool=zsmalloc"
       "usbcore.autosuspend=-1"
       "i915.force_probe=!7d67"
-      "enable_guc=0"
+      "i915.enable_guc=3"
       "xe.force_probe=7d67"
       "xe.enable_psr=0"
     ];
