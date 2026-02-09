@@ -14,7 +14,8 @@
     http-connections = 50;
     auto-optimise-store = true;
   };
-
+  hardware.enableAllFirmware = true;
+  hardware.cpu.intel.updateMicrocode = true;
   boot = {
     loader = {
       systemd-boot.enable = true;
@@ -22,19 +23,15 @@
       grub.useOSProber = true;
       timeout = 0;
     };
-
-    #kernelPackages = pkgs.linuxPackages_latest;
+    kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
       "quiet"
       "zswap.enabled=1"
       "zswap.compressor=zstd"
       "zswap.zpool=zsmalloc"
       "usbcore.autosuspend=-1"
-      "i915.force_probe=!7d67"
       "i915.enable_guc=3"
-      "xe.force_probe=7d67"
-      "xe.enable_psr=0"
-    ];
+          ];
 
     kernel.sysctl = {
       "kernel.split_lock_mitigate" = 0;
@@ -70,6 +67,10 @@
   };
 
   services = {
+    displayManager.autoLogin = {
+      enable = true;
+      user = "nix";
+    };
     pipewire = {
       enable = true;
       alsa.enable = true;
@@ -77,10 +78,8 @@
       pulse.enable = true;
     };
 
-    getty.autologinUser = "nix";
-    displayManager.cosmic-greeter.enable = false;
+    displayManager.cosmic-greeter.enable = true;
     desktopManager.cosmic.enable = true;
-
     automatic-timezoned.enable = false;
     avahi.enable = false;
     printing.enable = false;
