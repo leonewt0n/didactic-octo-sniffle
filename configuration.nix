@@ -47,7 +47,7 @@
     };
 
     initrd.systemd.enable = true;
-    initrd.availableKernelModules = [ "nvme" "xhci_pci" "usbhid" "tpm_tis" ];
+    initrd.kernelModules = [ "nvme" "xhci_pci" "usbhid" "tpm_tis" ];
     initrd.luks.devices."root" = {
     device = "/dev/nvme0n1p1"; # Your encrypted partition
     crypttabExtraOpts = [ "tpm2-device=auto" ];
