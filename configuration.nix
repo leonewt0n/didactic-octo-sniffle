@@ -272,6 +272,21 @@
         def ubuntu [] {
           podman run --rm -it -v $"($env.PWD):/data" -w /data ubuntu:latest bash
         }
+
+        def sync-vault [] {
+          let vault_path = ("~/obsidianVault" | path expand)
+          let timestamp = (date now | format date "%Y-%m-%d %H:%M:%S")
+
+        try {
+          print $"(ansi b)--- Syncing with Git ---(ansi reset)"
+          cd $vault_path
+          git add .
+          git commit -m $"Vault Update: ($timestamp)"
+          git push
+        } catch {
+           print $"(ansi r)--- Git Sync Failed! ---(ansi reset)"
+        }    
+}
       '';
 
       shellAliases = {
