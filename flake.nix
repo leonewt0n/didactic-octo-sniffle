@@ -1,52 +1,43 @@
 {
-  description = "A SecureBoot-enabled NixOS configurations";
+  description = "NixOS Unstable Configuration with Determinate Nix";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
+    # 1. Use the latest unstable Nix packages
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     #nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0";
-    lanzaboote = {
-      url = "github:nix-community/lanzaboote/v1.0.0";
+    
 
-      # Optional but recommended to limit the size of your system closure.
+    # 2. Determinate Systems Flake (Improved Nix settings, caching, daemon)
+    determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
+
+    # 3. Home Manager (must match nixpkgs version)
+    home-manager = {
+      url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, lanzaboote, determinate, ...}: {
-    nixosConfigurations = {
-      nixos = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
+  outputs = { self, nixpkgs, home-manager, determinate, ... }@inputs: {
+    nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = { inherit inputs; }; # Pass inputs to modules
+      modules = [
+        # Your main configuration file
+        ./configuration.nix
+        
+        # The Determinate Nix module (Enables Flakes, Determinate Caching, etc.)
+        determinate.nixosModules.default
 
-        modules = [
-          # This is not a complete NixOS configuration and you need to reference
-          # your normal configuration here.
-          ./configuration.nix
-          determinate.nixosModules.default
-
-          lanzaboote.nixosModules.lanzaboote
-
-          ({ pkgs, lib, ... }: {
-
-            environment.systemPackages = [
-              # For debugging and troubleshooting Secure Boot.
-              pkgs.sbctl
-            ];
-
-            # Lanzaboote currently replaces the systemd-boot module.
-            # This setting is usually set to true in configuration.nix
-            # generated at installation time. So we force it to false
-            # for now.
-            boot.loader.systemd-boot.enable = lib.mkForce false;
-
-            boot.lanzaboote = {
-              enable = true;
-              pkiBundle = "/var/lib/sbctl";
-            };
-          })
-        ];
-      };
+        # Home Manager Module (Replaces <home-manager/nixos>)
+        home-manager.nixosModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          
+          # Pass inputs to home-manager modules so you can use them there too
+          home-manager.extraSpecialArgs = { inherit inputs; };
+        }
+      ];
     };
   };
 }
-
