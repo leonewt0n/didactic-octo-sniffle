@@ -41,7 +41,12 @@ nvme0n1
 
 ```
 sudo systemd-cryptenroll --wipe-slot=tpm2 /dev/nvme0n1p1
-sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+2 /dev/nvme0n1p1
+sudo systemd-cryptenroll /dev/nvme0n1p2 \
+    --wipe-slot=tpm2 \
+    --tpm2-device=auto \
+    --tpm2-pcrs=0+2+7 \
+    --tpm2-pcrs=15:sha256=0000000000000000000000000000000000000000000000000000000000000000
 ```
 
 https://nix-community.github.io/lanzaboote/getting-started/prepare-your-system.html
+https://haseebmajid.dev/posts/2025-12-31-how-to-setup-a-new-pc-with-lanzaboote-tpm-decryption-sops-nix-impermanence-nixos-anywhere/
