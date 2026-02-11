@@ -34,6 +34,8 @@
       "zswap.compressor=zstd"
       "zswap.zpool=zsmalloc"
       "usbcore.autosuspend=-1"
+      "i915.force_probe=!7d67"
+      "xe.force_probe=7d67"
       "i915.enable_guc=3"
       "8250.nr_uarts=0"
       "rd.systemd.show_status=false"
@@ -50,9 +52,9 @@
 
     initrd.systemd.enable = true;
     initrd.kernelModules = [ "nvme" "xhci_pci" "usbhid" "tpm_tis" "tpm_crb" ];
-    initrd.luks.devices."root" = {
+    initrd.luks.devices."luks-682ff252-aeba-4582-853d-ed17b92ec0fa" = {
     device = "/dev/nvme0n1p1"; # Your encrypted partition
-    crypttabExtraOpts = [ "tpm2-device=auto" "tpm2-measure=yes" "x-systemd.device-timeout=10s" "x-initrd.attach"];
+    crypttabExtraOpts = [ "tpm2-device=auto"  "x-systemd.device-timeout=10s" ];
   };
     initrd.verbose = false;
     consoleLogLevel = 0;
