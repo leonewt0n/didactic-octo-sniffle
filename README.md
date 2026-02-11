@@ -1,4 +1,4 @@
-# Personal Config File for Intel 265K System with Intel GPU + limine Secureboot w/ TPM LUKS unlock
+# Personal Config File for Intel 265K System with Intel GPU + Lanzaboote Secureboot w/ TPM LUKS unlock
 
 This requires you to already have generated the keys and enrolled them with `sbctl`.
 
@@ -43,3 +43,5 @@ nvme0n1
 sudo systemd-cryptenroll --wipe-slot=tpm2 /dev/nvme0n1p1
 sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+2 /dev/nvme0n1p1
 ```
+
+https://nix-community.github.io/lanzaboote/getting-started/prepare-your-system.html
