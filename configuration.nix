@@ -25,7 +25,7 @@
         secureBoot.enable = true;
     };
       systemd-boot.enable = lib.mkForce false;
-      timeout = 0;
+      timeout = 2;
     };
     kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
@@ -37,6 +37,8 @@
       "i915.enable_guc=3"
       "8250.nr_uarts=0"
       "rd.systemd.show_status=false"
+      "rd.tpm2.wait-for-device=1"
+      "tpm_tis.interrupts=0"
           ];
 
     kernel.sysctl = {
@@ -50,7 +52,7 @@
     initrd.kernelModules = [ "nvme" "xhci_pci" "usbhid" "tpm_tis" "tpm_crb" ];
     initrd.luks.devices."root" = {
     device = "/dev/nvme0n1p1"; # Your encrypted partition
-    crypttabExtraOpts = [ "tpm2-device=auto" "tpm2-measure=yes" "x-systemd.device-timeout=10s" ];
+    crypttabExtraOpts = [ "tpm2-device=auto" "tpm2-measure=yes" "x-systemd.device-timeout=10s" "x-initrd.attach"];
   };
     initrd.verbose = false;
     consoleLogLevel = 0;
@@ -172,7 +174,7 @@
   time.timeZone = "America/Los_Angeles";
 
   environment.systemPackages = with pkgs; [
-    btop
+    #btop
     git
     gh
     gnupg
