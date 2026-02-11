@@ -1,4 +1,4 @@
-# Personal Config File for Intel 265K System with Intel GPU + Linmone Secureboot w/ TPM LUKS unlock
+# Personal Config File for Intel 265K System with Intel GPU + limine Secureboot w/ TPM LUKS unlock
 
 This requires you to already have generated the keys and enrolled them with `sbctl`.
 
