@@ -17,16 +17,15 @@
   hardware.enableAllFirmware = true;
   hardware.cpu.intel.updateMicrocode = true;
   boot = {
-    loader = {
-        limine = {
-        enable = true;
-        efiSupport = true;
-        maxGenerations = 10;
-        secureBoot.enable = true;
+    lanzaboote = {
+      enable = true;
+      pkiBundle = "/var/lib/sbctl";
+      autoEnrollKeys.enable = true;
     };
-      systemd-boot.enable = lib.mkForce false;
-      timeout = 2;
-    };
+    
+    loader.systemd-boot.enable = lib.mkForce false;
+    loader.timeout = 2;
+
     kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
       "quiet"
