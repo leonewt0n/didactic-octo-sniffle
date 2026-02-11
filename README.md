@@ -1,22 +1,23 @@
-# Personal Config File for Intel 265K System with Intel GPU
+# Personal Config File for Intel 265K System with Intel GPU + Linmone Secureboot w/ TPM LUKS unlock
 
-# NixOS Pin TPM LUKS with Lanzaboote Secure Boot
+This requires you to already have generated the keys and enrolled them with `sbctl`.
 
-https://nix-community.github.io/lanzaboote/getting-started/prepare-your-system.html
-
-# MAKE SURE YOUR USING THE RIGHT PARTITION!
-```
-sudo systemd-cryptenroll --tpm2-with-pin=yes --tpm2-device=auto --tpm2-pcrs=0+2+7+12 --wipe-slot=tpm2 /dev/nvme0n1p2
-```
-
-On some systems, manually remove all keys and enroll efi in /efi/linux/ or /efi/nix/ folder to get it to boot then run command to enroll --microsoft.
-
-# For Determinate Nix after boot
+To create keys use `sbctl create-keys`.
 
 ```
-sudo nixos-rebuild \
-  --option extra-substituters https://install.determinate.systems \
-  --option extra-trusted-public-keys cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM= \
-  --flake ... \
-  switch
+nix-shell -p sbctl
+sudo sbctl create-keys
+```
+
+To enroll them first reset secure boot to “Setup Mode”. This is device specific. Then enroll them using `sbctl enroll-keys -m -f`.
+
+You can now rebuild your system with this option enabled.
+
+Afterwards turn setup mode off and enable secure boot.
+
+```
+lsblk
+sudo systemd-cryptenroll --wipe-slot=tpm2 /dev/nvme0n1p1
+sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+2+7 /dev/nvme0n1p1
+
 ```
