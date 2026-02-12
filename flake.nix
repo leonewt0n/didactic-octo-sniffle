@@ -19,6 +19,8 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # 4. Impermanence
+    impermanence.url = "github:nix-community/impermanence";
   };
 
   outputs = {
@@ -27,6 +29,7 @@
     home-manager,
     lanzaboote,
     determinate,
+    impermanence,
     ...
   } @ inputs: {
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
@@ -36,6 +39,7 @@
         lanzaboote.nixosModules.lanzaboote
         determinate.nixosModules.default
         home-manager.nixosModules.home-manager
+        impermanence.nixosModules.impermanence
 
         {
           home-manager.useGlobalPkgs = true;
@@ -92,7 +96,9 @@
               "zswap.compressor=zstd"
               "zswap.zpool=zsmalloc"
               "usbcore.autosuspend=-1"
-              "i915.enable_guc=3"
+              "i915.force_probe=!7d67"
+              "xe.force_probe=7d67"
+             # "i915.enable_guc=3"
               "8250.nr_uarts=0"
               "rd.systemd.show_status=false"
               "rd.tpm2.wait-for-device=1"
@@ -313,7 +319,7 @@
                       $message
                     }
                     git commit -m $commit_msg
-                    git push origin main
+                    git push 
                   }
 
                   $env.SSH_AUTH_SOCK = $"/run/user/(id -u)/gcr/ssh"
@@ -324,21 +330,6 @@
                     podman run --rm -it -v $"($env.PWD):/data" -w /data ubuntu:latest bash
                   }
 
-                  def sync-vault [] {
-                    let vault_path = ("~/obsidianVault" | path expand)
-                    let timestamp = (date now | format date "%Y-%m-%d %H:%M:%S")
-
-                    try {
-                      print $"(ansi b)--- Syncing with Git ---(ansi reset)"
-                      cd $vault_path
-                      git pull --rebase
-                      git add .
-                      git commit -m $"Vault Update: ($timestamp)"
-                      git push
-                    } catch {
-                      print $"(ansi r)--- Git Sync Failed! ---(ansi reset)"
-                    }
-                  }
                 '';
                 shellAliases = {
                   # ls = "eza --icons";
