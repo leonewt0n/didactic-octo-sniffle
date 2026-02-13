@@ -277,12 +277,16 @@
             ];
             fontconfig.defaultFonts.monospace = [ "JetBrainsMono" ];
           };
-
+          users.mutableUsers = false;
+          users.users.root = {
+          hashedPassword = "!"; # An exclamation mark is an invalid hash, effectively locking the account
+          };
           users.users.nix = {
             isNormalUser = true;
             shell = pkgs.nushell;
             description = "nix user";
             extraGroups = [ "wheel" "video" "seat" "audio" ];
+            hashedPassword = "HASH" mkpasswd -m sha-512;
           };
 
           # Home Manager Config
