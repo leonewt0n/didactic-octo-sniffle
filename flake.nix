@@ -109,7 +109,7 @@
             blocky = {
               enable = true;
               settings = {
-                ports.dns = 53; bootstrapDns = { upstream = "https://cloudflare-dns.com/dns-query"; ips = [ "1.1.1.1" ]; };
+                ports.dns ="127.0.0.1:53"; bootstrapDns = { upstream = "https://cloudflare-dns.com/dns-query"; ips = [ "1.1.1.1" ]; };
                 upstreams = { groups.default = [ "https://cloudflare-dns.com/dns-query" "https://dns.quad9.net/dns-query" ]; strategy = "parallel_best"; };
                 caching = { minTime = "2h"; maxTime = "12h"; prefetching = true; };
                 blocking = { blockType = "zeroIp"; denylists.ads = [ "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" ]; clientGroupsBlock.default = [ "ads" ]; };
@@ -126,7 +126,7 @@
           };
 
           programs = {
-            mosh.enable = true; steam.enable = true;
+            steam.enable = true;
             gnupg.agent = { enable = true; enableSSHSupport = false; pinentryPackage = pkgs.pinentry-curses; settings.pinentry-program = lib.mkForce "${pkgs.pinentry-curses}/bin/pinentry-curses"; };
           };
 
