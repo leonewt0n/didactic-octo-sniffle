@@ -19,22 +19,16 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
     # 4. Impermanence
     impermanence.url = "github:nix-community/impermanence";
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    home-manager,
-    lanzaboote,
-    determinate,
-    impermanence,
-    ...
-  } @ inputs: {
+  outputs = { self, nixpkgs, home-manager, lanzaboote, determinate, impermanence, ... } @ inputs: {
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       specialArgs = { inherit inputs; };
+      
       modules = [
         lanzaboote.nixosModules.lanzaboote
         determinate.nixosModules.default
@@ -47,22 +41,22 @@
           home-manager.extraSpecialArgs = { inherit inputs; };
         }
 
-        # Main System Configuration
+        # --- Main System Configuration ---
         ({ pkgs, lib, ... }: {
-          imports = [
-            ./hardware-configuration.nix
-          ];
+          imports = [ ./hardware-configuration.nix ];
 
           system.stateVersion = "26.05";
           nixpkgs.config.allowUnfree = true;
 
+          # --- Nix Settings ---
           nix.settings = {
-            max-jobs = "auto";
+            auto-optimise-store = true;
             eval-cores = 0;
             http-connections = 50;
-            auto-optimise-store = true;
+            max-jobs = "auto";
           };
 
+          # --- Hardware & Graphics ---
           hardware = {
             enableAllFirmware = true;
             cpu.intel.updateMicrocode = true;
@@ -70,32 +64,22 @@
               enable = true;
               enable32Bit = true;
               extraPackages = with pkgs; [
-                vpl-gpu-rt
-                intel-media-driver
                 intel-compute-runtime
+                intel-media-driver
+                vpl-gpu-rt
               ];
             };
           };
 
-          environment.persistence."/persistent" = {
-  hideMounts = true;
-  directories = [
-    "/var/log"
-    "/var/lib/nixos"
-    "/var/lib/systemd/coredump"
-    "/var/lib/sbctl" 
-  ];
-  files = [
-    "/etc/machine-id"
-
-  ];
-};
-          
+          # --- Bootloader & Kernel ---
           boot = {
+            consoleLogLevel = 0;
+            kernelPackages = pkgs.linuxPackages_latest;
+            
             lanzaboote = {
               enable = true;
-              pkiBundle = "/var/lib/sbctl";
               autoEnrollKeys.enable = true;
+              pkiBundle = "/var/lib/sbctl";
             };
 
             loader = {
@@ -103,104 +87,95 @@
               timeout = 2;
             };
 
-            kernelPackages = pkgs.linuxPackages_latest;
             kernelParams = [
-              "quiet"
-              "zswap.enabled=1"
-              "zswap.compressor=zstd"
-              "zswap.zpool=zsmalloc"
-              "usbcore.autosuspend=-1"
-              "i915.force_probe=!7d67"
-              "xe.force_probe=7d67"
-             # "i915.enable_guc=3"
               "8250.nr_uarts=0"
+              "i915.force_probe=!7d67"
+              "quiet"
               "rd.systemd.show_status=false"
               "rd.tpm2.wait-for-device=1"
               "tpm_tis.interrupts=0"
+              "usbcore.autosuspend=-1"
+              "xe.force_probe=7d67"
+              "zswap.compressor=zstd"
+              "zswap.enabled=1"
+              "zswap.zpool=zsmalloc"
             ];
 
             kernel.sysctl = {
-              "kernel.split_lock_mitigate" = 0;
               "kernel.nmi_watchdog" = 0;
-              "vm.swappiness" = 100;
+              "kernel.split_lock_mitigate" = 0;
               "vm.max_map_count" = 2147483642;
+              "vm.swappiness" = 100;
             };
 
             initrd = {
               systemd.enable = true;
               kernelModules = [ "nvme" "xhci_pci" "usbhid" "tpm_tis" "tpm_crb" ];
               verbose = false;
+
               systemd.services.rollback = {
-    description = "Rollback BTRFS root subvolume to a pristine state";
-    wantedBy = [
-      "initrd.target"
-    ];
-    after = [
-      # LUKS/TPM process
-      "systemd-cryptsetup@enc.service"
-    ];
-    before = [
-      "sysroot.mount"
-    ];
-    unitConfig.DefaultDependencies = "no";
-    serviceConfig.Type = "oneshot";
-    script = ''
-      mkdir -p /mnt
-      # We first mount the btrfs root to /mnt
-      # so we can manipulate btrfs subvolumes.
-      mount -o subvol=/ /dev/mapper/enc /mnt
-      # While we're tempted to just delete /root and create
-      # a new snapshot from /root-blank, /root is already
-      # populated at this point with a number of subvolumes,
-      # which makes `btrfs subvolume delete` fail.
-      # So, we remove them first.
-      #
-      # /root contains subvolumes:
-      # - /root/var/lib/portables
-      # - /root/var/lib/machines
-      #
-      # I suspect these are related to systemd-nspawn, but
-      # since I don't use it I'm not 100% sure.
-      # Anyhow, deleting these subvolumes hasn't resulted
-      # in any issues so far, except for fairly
-      # benign-looking errors from systemd-tmpfiles.
-      btrfs subvolume list -o /mnt/root |
-        cut -f9 -d' ' |
-        while read subvolume; do
-          echo "deleting /$subvolume subvolume..."
-          btrfs subvolume delete "/mnt/$subvolume"
-        done &&
-        echo "deleting /root subvolume..." &&
-        btrfs subvolume delete /mnt/root
-      echo "restoring blank /root subvolume..."
-      btrfs subvolume snapshot /mnt/root-blank /mnt/root
-      # Once we're done rolling back to a blank snapshot,
-      # we can unmount /mnt and continue on the boot process.
-      umount /mnt
-    '';
-  };
+                description = "Rollback BTRFS root subvolume to a pristine state";
+                wantedBy = [ "initrd.target" ];
+                after = [ "systemd-cryptsetup@enc.service" ]; # LUKS/TPM process
+                before = [ "sysroot.mount" ];
+                unitConfig.DefaultDependencies = "no";
+                serviceConfig.Type = "oneshot";
+                script = ''
+                  mkdir -p /mnt
+                  # We first mount the btrfs root to /mnt so we can manipulate btrfs subvolumes.
+                  mount -o subvol=/ /dev/mapper/enc /mnt
+                  
+                  # While we're tempted to just delete /root and create a new snapshot from /root-blank, 
+                  # /root is already populated at this point with a number of subvolumes, which makes 
+                  # `btrfs subvolume delete` fail.
+                  # So, we remove them first.
+                  #
+                  # /root contains subvolumes:
+                  # - /root/var/lib/portables
+                  # - /root/var/lib/machines
+                  #
+                  # I suspect these are related to systemd-nspawn, but since I don't use it I'm not 100% sure.
+                  # Anyhow, deleting these subvolumes hasn't resulted in any issues so far, 
+                  # except for fairly benign-looking errors from systemd-tmpfiles.
+
+                  btrfs subvolume list -o /mnt/root | cut -f9 -d' ' | while read subvolume; do
+                    echo "deleting /$subvolume subvolume..."
+                    btrfs subvolume delete "/mnt/$subvolume"
+                  done &&
+                  echo "deleting /root subvolume..." &&
+                  btrfs subvolume delete /mnt/root
+                  
+                  echo "restoring blank /root subvolume..."
+                  btrfs subvolume snapshot /mnt/root-blank /mnt/root
+                  
+                  # Once we're done rolling back to a blank snapshot, we can unmount /mnt and continue on the boot process.
+                  umount /mnt
+                '';
+              };
             };
-            
-            consoleLogLevel = 0;
           };
 
+          # --- Storage & Persistence ---
           fileSystems = {
-  "/" = {
-    fsType = "btrfs";
-    options = [ "subvol=root" "compress=zstd" ];
-  };
+            "/" = { fsType = "btrfs"; options = [ "subvol=root" "compress=zstd" ]; };
+            "/nix" = { fsType = "btrfs"; options = [ "subvol=nix" "compress=zstd" ]; };
+            "/persistent" = {
+              fsType = "btrfs";
+              neededForBoot = true;
+              options = [ "subvol=persistent" "compress=zstd" ];
+            };
+          };
 
-  "/nix" = {
-    fsType = "btrfs";
-    options = [ "subvol=nix" "compress=zstd" ];
-  };
-
-  "/persistent" = {
-    fsType = "btrfs";
-    neededForBoot = true;
-    options = [ "subvol=persistent" "compress=zstd" ];
-  };
-};
+          environment.persistence."/persistent" = {
+            hideMounts = true;
+            directories = [
+              "/var/lib/nixos"
+              "/var/lib/sbctl"
+              "/var/lib/systemd/coredump"
+              "/var/log"
+            ];
+            files = [ "/etc/machine-id" ];
+          };
 
           swapDevices = [{
             device = "/swapfile";
@@ -208,26 +183,65 @@
             priority = 10;
           }];
 
+          # --- Networking & Security ---
+          networking = {
+            hostName = "nixos";
+            useNetworkd = true;
+            networkmanager.enable = false;
+            wireless.enable = lib.mkForce false;
+            nameservers = [ "127.0.0.1" ];
+            firewall = {
+              enable = true;
+              trustedInterfaces = [ "tailscale0" ];
+              allowedUDPPorts = [ 41641 ];
+              extraCommands = ''
+                # Allow local lookups to your Blocky instance
+                iptables -A OUTPUT -d 127.0.0.1 -p udp --dport 53 -j ACCEPT
+                iptables -A OUTPUT -d 127.0.0.1 -p tcp --dport 53 -j ACCEPT
+
+                # BLOCK all other outgoing DNS to prevent apps from bypassing Blocky
+                iptables -A OUTPUT -p udp --dport 53 -j REJECT
+                iptables -A OUTPUT -p tcp --dport 53 -j REJECT
+                iptables -A OUTPUT -p tcp --dport 853 -j REJECT
+              '';
+            };
+          };
+
+          security.pam.services = {
+            login.u2fAuth = true;
+            sudo.u2fAuth = true;
+          };
+
+          security.pam.u2f = {
+            enable = true;
+            control = "sufficient"; # Use "sufficient" if you want password OR key
+            settings = {
+              cue = true; # Tells the system to prompt you to "touch your device"
+            };
+          };
+
           services = {
+            # Core Services
+            tailscale.enable = true;
+            flatpak.enable = true;
+            fwupd.enable = true;
             resolved.enable = false;
+            avahi.enable = false;
+            printing.enable = false;
+            geoclue2.enable = lib.mkForce false;
+            automatic-timezoned.enable = false;
+
+            # Media & Desktop
             pipewire = {
               enable = true;
               alsa.enable = true;
               alsa.support32Bit = true;
               pulse.enable = true;
             };
-
             displayManager.cosmic-greeter.enable = true;
             desktopManager.cosmic.enable = true;
-            
-            automatic-timezoned.enable = false;
-            avahi.enable = false;
-            printing.enable = false;
-            geoclue2.enable = lib.mkForce false;
-            tailscale.enable = true;
-            flatpak.enable = true;
-            fwupd.enable = true;
 
+            # DNS Blocking
             blocky = {
               enable = true;
               settings = {
@@ -257,45 +271,36 @@
             };
           };
 
-          networking = {
-            hostName = "nixos";
-            useNetworkd = true;
-            nameservers = [ "127.0.0.1" ];
-            networkmanager.enable = false;
-            wireless.enable = lib.mkForce false;
-            firewall = {
+          # --- Virtualization ---
+          virtualisation = {
+            containers.enable = true;
+            podman = {
               enable = true;
-              trustedInterfaces = [ "tailscale0" ];
-              allowedUDPPorts = [ 41641 ];
-              extraCommands = ''
-                # Allow local lookups to your Blocky instance
-                iptables -A OUTPUT -d 127.0.0.1 -p udp --dport 53 -j ACCEPT
-                iptables -A OUTPUT -d 127.0.0.1 -p tcp --dport 53 -j ACCEPT
-
-                # BLOCK all other outgoing DNS to prevent apps from bypassing Blocky
-                iptables -A OUTPUT -p udp --dport 53 -j REJECT
-                iptables -A OUTPUT -p tcp --dport 53 -j REJECT
-                iptables -A OUTPUT -p tcp --dport 853 -j REJECT
-              '';
+              dockerCompat = true;
+              defaultNetwork.settings.dns_enabled = true;
             };
           };
 
-          systemd = {
-            network.enable = true;
-            services.ModemManager.enable = false;
-          };
-
-          time.timeZone = "America/Los_Angeles";
-
+          # --- System Packages & Fonts ---
           environment.systemPackages = with pkgs; [
             btop
             git
-            gnupg
             git-remote-gcrypt
+            gnupg
             pinentry-curses
             sbctl
           ];
 
+          fonts = {
+            enableDefaultPackages = true;
+            packages = with pkgs; [
+              jetbrains-mono
+              nerd-fonts.jetbrains-mono
+            ];
+            fontconfig.defaultFonts.monospace = [ "JetBrainsMono" ];
+          };
+
+          # --- Programs ---
           programs = {
             mosh.enable = true;
             steam.enable = true;
@@ -307,41 +312,28 @@
             };
           };
 
+          systemd = {
+            network.enable = true;
+            services.ModemManager.enable = false;
+          };
+
+          time.timeZone = "America/Los_Angeles";
           documentation.nixos.enable = false;
 
-          virtualisation = {
-            containers.enable = true;
-            podman = {
-              enable = true;
-              dockerCompat = true;
-              defaultNetwork.settings.dns_enabled = true;
-            };
-          };
-
-          fonts = {
-            enableDefaultPackages = true;
-            packages = with pkgs; [
-              jetbrains-mono
-              nerd-fonts.jetbrains-mono
-            ];
-            fontconfig.defaultFonts.monospace = [ "JetBrainsMono" ];
-          };
+          # --- Users ---
           users.mutableUsers = false;
-          users.users.root = {
-          hashedPassword = "!"; # An exclamation mark is an invalid hash, effectively locking the account
-          };
+          users.users.root.hashedPassword = "!"; # Locks account
           users.users.nix = {
             isNormalUser = true;
             shell = pkgs.nushell;
             description = "nix user";
             extraGroups = [ "wheel" "video" "seat" "audio" ];
-            hashedPassword = "HASH" mkpasswd -m sha-512;
+            hashedPassword = "$6$FA0MUKHblWK2Ym8O$aQx3otoJ2hYTDA2kyfhEdPFm5gJQgg/LUJ3GBOmr4/A2MtTwPUWd/ZlFlutCInhN7s7T/51fwWRGiJiM07R2r1";
           };
 
-          # Home Manager Config
+          # --- Home Manager Config ---
           home-manager.users.nix = { pkgs, ... }: {
             home.stateVersion = "26.05";
-
             manual = {
               manpages.enable = false;
               html.enable = false;
@@ -349,63 +341,45 @@
             };
 
             home.packages = with pkgs; [
-              helix
-              carapace
-              zoxide
               atuin
+              carapace
               fzf
+              helix
               starship
               zellij
+              zoxide
             ];
+
             home.persistence."/persistent" = {
-    directories = [ 
-      "git"
-      ".var"  # Flatpak data often lives here
-      "obsidianVault"
-      ".config"
-      ".var/app"
-      ".steam"
-      ".local/Steam"
-      ".local/share/flatpak"
-      "Archive"
-      "Documents"
-      "Downloads"
-      "DOS"
-      "Pictures"
-      "Videos"
-    
-      
-      # Recommended additions so you don't lose keys/history:
-      ".ssh"
-      ".gnupg"
-    ];
-    files = [
-      #".screenrc" # Example of a single file [cite: 191]
-      # ".zsh_history" # If you want to keep shell history
-      ".bashrc"
-    ];
-  };
+              directories = [
+                ".config"
+                ".gnupg"
+                ".local/share/flatpak"
+                ".local/Steam"
+                ".ssh"
+                ".steam"
+                ".var"
+                ".var/app"
+                "Archive"
+                "Documents"
+                "Downloads"
+                "DOS"
+                "git"
+                "obsidianVault"
+                "Pictures"
+                "Videos"
+              ];
+              files = [ ".bashrc" ];
+            };
 
             programs = {
-              starship = {
-                enable = true;
-                enableNushellIntegration = true;
-              };
-              zoxide = {
-                enable = true;
-                enableNushellIntegration = true;
-              };
-              atuin = {
-                enable = true;
-                enableNushellIntegration = true;
-              };
+              starship = { enable = true; enableNushellIntegration = true; };
+              zoxide = { enable = true; enableNushellIntegration = true; };
+              atuin = { enable = true; enableNushellIntegration = true; };
+              carapace = { enable = true; enableNushellIntegration = true; };
               fzf.enable = true;
               zellij.enable = true;
-              carapace = {
-                enable = true;
-                enableNushellIntegration = true;
-              };
-              
+
               nushell = {
                 enable = true;
                 configFile.text = ''
@@ -439,11 +413,8 @@
                   def ubuntu [] {
                     podman run --rm -it -v $"($env.PWD):/data" -w /data ubuntu:latest bash
                   }
-
                 '';
-                shellAliases = {
-                  # ls = "eza --icons";
-                };
+                shellAliases = {};
               };
             };
           };
