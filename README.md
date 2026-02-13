@@ -55,17 +55,16 @@ Bash
 mount -o subvol=root,compress=zstd /dev/mapper/enc /mnt
 
 # 2. Create Mountpoints
-mkdir -p /mnt/{home,nix,persist,boot}
+mkdir -p /mnt/{nix,persistent,boot}
 
 # 3. Mount the Rest
 mount -o subvol=home,compress=zstd /dev/mapper/enc /mnt/home
 mount -o subvol=nix,compress=zstd,noatime /dev/mapper/enc /mnt/nix
-mount -o subvol=persist,compress=zstd /dev/mapper/enc /mnt/persist
+mount -o subvol=persistent,compress=zstd /dev/mapper/enc /mnt/persistent
 
 # 4. Mount Boot Partition
 mount /dev/nvme0n1p2 /mnt/boot
 
-   
 
 Step 4: Install
 
@@ -73,6 +72,7 @@ Run the install command using your flake.
 Bash
 
 cd /mnt/etc/nixos
+nixos-generate-config --root /mnt
 git init
 git add .
 nixos-install --flake .#nixos
