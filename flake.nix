@@ -77,6 +77,20 @@
             };
           };
 
+          environment.persistence."/persist/system" = {
+  hideMounts = true;
+  directories = [
+    "/var/log"
+    "/var/lib/nixos"
+    "/var/lib/systemd/coredump"
+    "/var/lib/sbctl" 
+  ];
+  files = [
+    "/etc/machine-id"
+
+  ];
+};
+          
           boot = {
             lanzaboote = {
               enable = true;
@@ -117,12 +131,55 @@
               kernelModules = [ "nvme" "xhci_pci" "usbhid" "tpm_tis" "tpm_crb" ];
               verbose = false;
             };
+            initrd.postResumeCommands = lib.mkAfter ''
+  mkdir -p /btrfs_tmp
+  # UPDATE THIS LINE WITH YOUR REAL DEVICE PATH:
+  mount /dev/mapper/luks-682ff252-aeba-4582-853d-ed17b92ec0fa /btrfs_tmp
+  
+  if [[ -e /btrfs_tmp/root ]]; then
+      mkdir -p /btrfs_tmp/old_roots
+      timestamp=$(date --date="@$(stat -c %Y /btrfs_tmp/root)" "+%Y-%m-%-d_%H:%M:%S")
+      mv /btrfs_tmp/root "/btrfs_tmp/old_roots/$timestamp"
+  fi
+
+  delete_subvolume_recursively() {
+      IFS=$'\n'
+      for i in $(btrfs subvolume list -o "$1" | cut -f 9- -d ' '); do
+          delete_subvolume_recursively "/btrfs_tmp/$i"
+      done
+      btrfs subvolume delete "$1"
+  }
+
+  for i in $(find /btrfs_tmp/old_roots/ -maxdepth 1 -mtime +30); do
+      delete_subvolume_recursively "$i"
+  done
+
+  btrfs subvolume create /btrfs_tmp/root
+  umount /btrfs_tmp
+'';
             consoleLogLevel = 0;
           };
 
-          fileSystems."/" = {
-            options = [ "compress=zstd" ];
-          };
+          fileSystems = {
+  "/" = {
+    device = "/dev/mapper/luks-682ff252-aeba-4582-853d-ed17b92ec0fa";
+    fsType = "btrfs";
+    options = [ "subvol=root" "compress=zstd" ];
+  };
+
+  "/nix" = {
+    device = "/dev/mapper/luks-682ff252-aeba-4582-853d-ed17b92ec0fa";
+    fsType = "btrfs";
+    options = [ "subvol=nix" "compress=zstd" "noatime" ];
+  };
+
+  "/persist" = {
+    device = "/dev/mapper/luks-682ff252-aeba-4582-853d-ed17b92ec0fa";
+    fsType = "btrfs";
+    neededForBoot = true;
+    options = [ "subvol=persist" "compress=zstd" ];
+  };
+};
 
           swapDevices = [{
             device = "/swapfile";
@@ -275,6 +332,35 @@
               starship
               zellij
             ];
+            home.persistence."/persist/home/nix" = {
+    directories = [
+      "Downloads" 
+      "git"
+      ".var"  # Flatpak data often lives here
+      "obsidianVault"
+      ".config"
+      ".var/app"
+      ".steam"
+      ".local/Steam"
+      ".local/share/flatpak"
+      "Archive"
+      "Documents"
+      "Downloads"
+      "DOS"
+      "Pictures"
+      "Videos"
+      ".bashrc"
+      
+      # Recommended additions so you don't lose keys/history:
+      ".ssh"
+      ".gnupg"
+    ];
+    files = [
+      #".screenrc" # Example of a single file [cite: 191]
+      # ".zsh_history" # If you want to keep shell history
+    ];
+    allowOther = true;
+  };
 
             programs = {
               starship = {
