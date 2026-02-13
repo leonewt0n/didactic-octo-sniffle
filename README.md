@@ -17,11 +17,7 @@ Afterwards turn setup mode off and enable secure boot.
 
 ```
 sudo systemd-cryptenroll --wipe-slot=tpm2 /dev/nvme0n1p1
-sudo systemd-cryptenroll /dev/nvme0n1p2 \
-    --wipe-slot=tpm2 \
-    --tpm2-device=auto \
-    --tpm2-pcrs=0+2+7 \
-    --tpm2-pcrs=15:sha256=0000000000000000000000000000000000000000000000000000000000000000
+sudo systemd-cryptenroll /dev/nvme0n1p1 --tpm2-device=auto --tpm2-pcrs=0+2+7
 ```
 # TODO: Setup Impermence when we have more RAM
 https://wiki.nixos.org/wiki/Impermanence
