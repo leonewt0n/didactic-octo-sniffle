@@ -1,123 +1,120 @@
-# Impermanence on Intel 265K System with Intel GPU + Lanzaboote Secureboot w/ TPM LUKS unlock + Yubikey login/sudo
-# Security Benefits that destroy other Linux Distros
-* Users are immutable
-* Fresh root and home folder on boot (whitelisted files/folders)
-* Root account locked
-* Yubikey login and sudo
-* Limited binaries in system path
-* FHS non compliance renders nondeclared appimages and binaries useless
-* Single Source of Truth via flake.nix for system synced to Github
+# Hardened NixOS: Impermanence, Lanzaboote Secure Boot, & Yubikey MFA
 
-# Install
-* 2 Partions: root and boot
-* Change password hash for user before install
-* Enroll Yubikey after boot with the following command:
-```
-pamu2fcfg > ~/.config/Yubico/u2f_keys
-```
-```
-# Create a GPT partition table
+A high-security, stateless configuration for NixOS on **Intel Core Ultra 200 series (265K)** systems with Intel GPU support. This setup ensures a "fresh" system on every boot while maintaining critical data through hardware-backed encryption.
+
+## Key Security Features
+* **Impermanence:** Root and Home directories are wiped on every reboot. Only whitelisted data (defined in your Nix config) is stored on the `persistent` subvolume.
+* **Secure Boot (Lanzaboote):** Full UEFI Secure Boot support for NixOS.
+* **TPM 2.0 LUKS Unlock:** Automated, secure disk decryption tied to your system's hardware state (PCRs 0, 2, 7).
+* **Multi-Factor Authentication:** Yubikey U2F required for `login` and `sudo`.
+* **Stateless Configuration:** Single source of truth via `flake.nix` synced to GitHub.
+* **Hardened Environment:** Root account is locked, and non-FHS compliance blocks unauthorized or undeclared binaries.
+
+---
+
+## Installation & Partitioning
+
+### 1. Prepare Partitions
+```bash
+# Create GPT label
 parted /dev/nvme0n1 -- mklabel gpt
 
-# Create /boot (Partition 1)
+# Create ESP (Partition 1 - 1.5GB for Lanzaboote)
 parted /dev/nvme0n1 -- mkpart ESP fat32 1MB 1500MB
 parted /dev/nvme0n1 -- set 1 esp on
 
-# Create / (Partition 2)
+# Create LUKS Container (Partition 2)
 parted /dev/nvme0n1 -- mkpart primary 1500MB 100%
-# Format the partition with LUKS
+
+# Setup Encryption
 cryptsetup luksFormat /dev/nvme0n1p2
-
-# Open the encrypted partition (mapping it to 'crypted')
 cryptsetup open /dev/nvme0n1p2 enc
+```
 
-# Format Boot (FAT32 for UEFI)
+### 2. Btrfs Subvolumes for Impermanence
+```bash
+# Format Boot
 mkfs.fat -F 32 -n boot /dev/nvme0n1p1
 
-# Format Root (Ext4) inside the encrypted container
+# Format Root
 mkfs.btrfs -L root /dev/mapper/enc
 
-# Mount them for the installer
-mount /dev/mapper/root /mnt
-mkdir -p /mnt/boot
+# Create Subvolumes
+mount /dev/mapper/enc /mnt
+btrfs subvolume create /mnt/root
+btrfs subvolume create /mnt/clean-root
+btrfs subvolume create /mnt/nix
+btrfs subvolume create /mnt/persistent
+umount /mnt
+```
+
+### 3. Mount and Install
+```bash
+# Mount Root
+mount -o subvol=root,compress=zstd /dev/mapper/enc /mnt
+
+# Create and Mount Sub-targets
+mkdir -p /mnt/{nix,persistent,boot}
+mount -o subvol=nix,compress=zstd,noatime /dev/mapper/enc /mnt/nix
+mount -o subvol=persistent,compress=zstd /dev/mapper/enc /mnt/persistent
 mount /dev/nvme0n1p1 /mnt/boot
 
-cd /mnt
-btrfs subvolume create root
-btrfs subvolume create clean-root
-btrfs subvolume create nix
-btrfs subvolume create persistent
-
-nixos-generate-config --root /etc/nixos/
-cd /mnt/etc/nixos/
-git init
-git add
+# Run Installer
+nixos-generate-config --root /mnt
+cd /mnt/etc/nixos
+git init && git add .
 nixos-install --flake .#nixos
 ```
 
+---
 
-This requires you to already have generated the keys and enrolled them with `sbctl`.
+## Hardware-Backed Hardening
 
-To create keys use `sbctl create-keys`.
-
+### Yubikey MFA Setup
+Run this after your first boot to enroll your hardware key for U2F.
+```bash
+mkdir -p ~/.config/Yubico
+pamu2fcfg > ~/.config/Yubico/u2f_keys
 ```
+
+### Lanzaboote (Secure Boot)
+Ensure your BIOS is in **"Setup Mode"** before enrolling keys.
+```bash
 nix-shell -p sbctl
 sudo sbctl create-keys
+sudo sbctl enroll-keys -m -f
 ```
 
-To enroll them first reset secure boot to “Setup Mode”. This is device specific. Then enroll them using `sbctl enroll-keys -m -f`.
-
-You can now rebuild your system with this option enabled.
-
-Afterwards turn setup mode off and enable secure boot.
-
-```
-sudo systemd-cryptenroll --wipe-slot=tpm2 /dev/nvme0n1p1
-sudo systemd-cryptenroll /dev/nvme0n1p1 --tpm2-device=auto --tpm2-pcrs=0+2+7
+### TPM 2.0 Disk Decryption
+Bind your LUKS key to the TPM 2.0 chip.
+```bash
+# Wipe existing slots and bind to PCRs 0+2+7
+sudo systemd-cryptenroll --wipe-slot=tpm2 /dev/nvme0n1p2
+sudo systemd-cryptenroll /dev/nvme0n1p2 --tpm2-device=auto --tpm2-pcrs=0+2+7
 ```
 
-# RECOVERY/REINSTALL
+---
 
-```
-cryptsetup /dev/mapper/enc /mnt
-cd /mnt
+## Recovery & Reinstallation
+Since the system is stateless, you can "factory reset" by wiping the root subvolume.
 
-# Delete the old system root (if it exists) to start fresh
-# Create the fresh subvolumes
-btrfs subvolume create root
+### Step 1: Wipe Existing Root
+```bash
+cryptsetup open /dev/nvme0n1p2 enc
+mount /dev/mapper/enc /mnt
+btrfs subvolume delete /mnt/root
+btrfs subvolume create /mnt/root
 umount /mnt
 ```
-Step 2: Mount Targets for Installation
 
-Now we mount the subvolumes into /mnt so the installer knows where to put files.
-
-# 1. Mount Root
-```
+### Step 2: Remount and Re-install
+```bash
 mount -o subvol=root,compress=zstd /dev/mapper/enc /mnt
-```
-# 2. Create Mountpoints
-```
 mkdir -p /mnt/{nix,persistent,boot}
-```
-# 3. Mount the Rest
-```
-mount -o subvol=home,compress=zstd /dev/mapper/enc /mnt/home
 mount -o subvol=nix,compress=zstd,noatime /dev/mapper/enc /mnt/nix
 mount -o subvol=persistent,compress=zstd /dev/mapper/enc /mnt/persistent
-```
-# 4. Mount Boot Partition
-```
-mount /dev/nvme0n1p2 /mnt/boot
-```
+mount /dev/nvme0n1p1 /mnt/boot
 
-Step 4: Install
-
-Run the install command using your flake.
-
-```
 cd /mnt/etc/nixos
-nixos-generate-config --root /mnt
-git init
-git add .
 nixos-install --flake .#nixos
 ```
