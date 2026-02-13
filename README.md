@@ -1,6 +1,12 @@
 # Personal Config File for Intel 265K System with Intel GPU + Lanzaboote Secureboot w/ TPM LUKS unlock
 
 # Install
+* 2 Partions: root and boot
+* Change password hash for user before install
+* Enroll Yubikey after boot with the following command:
+```
+pamu2fcfg > ~/.config/Yubico/u2f_keys
+```
 ```
 # Create a GPT partition table
 parted /dev/nvme0n1 -- mklabel gpt
