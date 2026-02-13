@@ -1,6 +1,6 @@
 # Personal Config File for Intel 265K System with Intel GPU + Lanzaboote Secureboot w/ TPM LUKS unlock
 
-#Install
+# Install
 Formatt disk into 2 partitions: /boot and /. Ensure you have the following subvolumes created:
 ```
 btrfs subvolume create root
