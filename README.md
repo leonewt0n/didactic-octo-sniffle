@@ -1,4 +1,4 @@
-# Personal Config File for Intel 265K System with Intel GPU + Lanzaboote Secureboot w/ TPM LUKS unlock
+# Impermanence on Intel 265K System with Intel GPU + Lanzaboote Secureboot w/ TPM LUKS unlock + Yubikey login/sudo
 
 # Install
 * 2 Partions: root and boot
