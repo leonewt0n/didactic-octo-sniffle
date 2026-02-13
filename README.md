@@ -1,5 +1,21 @@
 # Personal Config File for Intel 265K System with Intel GPU + Lanzaboote Secureboot w/ TPM LUKS unlock
 
+#Install
+Formatt disk into 2 partitions: /boot and /. Ensure you have the following subvolumes created:
+```
+btrfs subvolume create root
+btrfs subvolume create clean-root
+btrfs subvolume create nix
+btrfs subvolume create persistent
+
+nixos-generate-config --root /etc/nixos/
+cd /etc/nixos/
+git init
+git add
+nixos-install --flake .#nixos
+```
+
+
 This requires you to already have generated the keys and enrolled them with `sbctl`.
 
 To create keys use `sbctl create-keys`.
@@ -19,13 +35,6 @@ Afterwards turn setup mode off and enable secure boot.
 sudo systemd-cryptenroll --wipe-slot=tpm2 /dev/nvme0n1p1
 sudo systemd-cryptenroll /dev/nvme0n1p1 --tpm2-device=auto --tpm2-pcrs=0+2+7
 ```
-# TODO: Setup Impermence when we have more RAM
-https://wiki.nixos.org/wiki/Impermanence
-
-
-https://nix-community.github.io/lanzaboote/getting-started/prepare-your-system.html
-https://haseebmajid.dev/posts/2025-12-31-how-to-setup-a-new-pc-with-lanzaboote-tpm-decryption-sops-nix-impermanence-nixos-anywhere/
-
 
 # RECOVERY
 
@@ -43,9 +52,8 @@ cd /mnt-btrfs
     # Ensure these exist (do not delete them if they have data!)
     # If your home data is in "@home", rename it to "home" now:
     # mv @home home
-    [ ! -d home ] && btrfs subvolume create home
     [ ! -d nix ] && btrfs subvolume create nix
-    [ ! -d persist ] && btrfs subvolume create persist
+    [ ! -d persist ] && btrfs subvolume create persistent
 ```
 Step 2: Mount Targets for Installation
 
