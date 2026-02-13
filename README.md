@@ -37,6 +37,7 @@ cd /mnt-btrfs
 
     # Create the fresh subvolumes
     btrfs subvolume create root
+    btrfs subvolume create clean-root
 
     # Ensure these exist (do not delete them if they have data!)
     # If your home data is in "@home", rename it to "home" now:
