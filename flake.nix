@@ -92,7 +92,7 @@
           swapDevices = [{ device = "/swapfile"; size = 16384; priority = 10; }];
 
           networking = {
-            hostName = "nixos"; useNetworkd = true; networkmanager.enable = false; wireless.enable = lib.mkForce false;
+            hostName = "nixos"; 
             nameservers = [ "127.0.0.1" ];
             firewall = { enable = true; trustedInterfaces = [ "tailscale0" ]; allowedUDPPorts = [ 41641 ]; };
           };
@@ -102,9 +102,7 @@
 
           services = {
             tailscale.enable = true; flatpak.enable = true; fwupd.enable = true;
-            resolved.enable = false; avahi.enable = false; printing.enable = false;
-            geoclue2.enable = lib.mkForce false; automatic-timezoned.enable = false;
-            pipewire = { enable = true; alsa.enable = true; alsa.support32Bit = true; pulse.enable = true; };
+            resolved.enable = false;pipewire = { enable = true; alsa.enable = true; alsa.support32Bit = true; pulse.enable = true; };
             displayManager.cosmic-greeter.enable = true; desktopManager.cosmic.enable = true;
             blocky = {
               enable = true;
@@ -130,7 +128,6 @@
             gnupg.agent = { enable = true; enableSSHSupport = false; pinentryPackage = pkgs.pinentry-curses; settings.pinentry-program = lib.mkForce "${pkgs.pinentry-curses}/bin/pinentry-curses"; };
           };
 
-          systemd = { network.enable = true; services.ModemManager.enable = false; };
           time.timeZone = "America/Los_Angeles";
           documentation.nixos.enable = false;
 
