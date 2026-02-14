@@ -158,7 +158,7 @@
               files = [ ".bashrc" ];
             };
             programs = {
-              git = { enable = true; settings.user = { namee = "Leo Newton"; email = "leo253@pm.me"; }; settings.init.defaultBranch = "main"; };
+              git = { enable = true; settings.user = { name = "Leo Newton"; email = "leo253@pm.me"; }; settings.init.defaultBranch = "main"; };
               starship = { enable = true; enableNushellIntegration = true; };
               zoxide = { enable = true; enableNushellIntegration = true; };
               atuin = { enable = true; enableNushellIntegration = true; };
