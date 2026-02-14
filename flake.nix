@@ -133,7 +133,7 @@
           users.mutableUsers = false;
           users.users.root.hashedPassword = "!";
           users.users.nix = {
-            isNormalUser = true; shell = pkgs.nushell; description = "nix user"; extraGroups = [ "wheel" "video" "seat" "audio" ];
+            isNormalUser = true; shell = pkgs.nushell; description = "nix user"; extraGroups = [ "wheel" "video" "render" "seat" "audio" ];
             hashedPassword = "$6$FA0MUKHblWK2Ym8O$aQx3otoJ2hYTDA2kyfhEdPFm5gJQgg/LUJ3GBOmr4/A2MtTwPUWd/ZlFlutCInhN7s7T/51fwWRGiJiM07R2r1";
           };
 
@@ -148,8 +148,7 @@
             };
             home.persistence."/persistent" = {
               directories = [ 
-                ".config" ".gnupg" ".local/share/flatpak" ".local/Steam" ".local/share/Steam" ".local/share/atuin" 
-                ".local/share/zoxide" ".ssh" ".steam" ".var" ".var/app" "Archive" "Documents" "Downloads" "DOS" "git" "obsidianVault" "Pictures" "Videos" 
+                ".config" ".gnupg" ".local/share"  ".ssh"  ".var"  "Archive" "Documents" "Downloads" "DOS" "git" "obsidianVault" "Pictures" "Videos" 
               ];
               files = [ ".bashrc" ];
             };
