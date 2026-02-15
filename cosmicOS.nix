@@ -66,9 +66,6 @@
             firewall = { enable = true; trustedInterfaces = [ "tailscale0" ]; allowedUDPPorts = [ 41641 ]; };
           };
 
-          security.pam.services = { login.u2fAuth = true; sudo.u2fAuth = true; };
-          security.pam.u2f = { enable = true; control = "sufficient"; settings.cue = true; };
-
           services = {
             tailscale.enable = true; flatpak.enable = true; fwupd.enable = true;
             resolved.enable = false; automatic-timezoned.enable = true;
