@@ -101,7 +101,7 @@
           security.pam.u2f = { enable = true; control = "sufficient"; settings.cue = true; };
 
           services = {
-            tailscale.enable = true; flatpak.enable = true; fwupd.enable = true; localtimed.enable = true; system76-scheduler.enable = true;
+            tailscale.enable = true; flatpak.enable = true; fwupd.enable = true; tzupdate.enable = true; system76-scheduler.enable = true;
             resolved.enable = false;pipewire = { enable = true; alsa.enable = true; alsa.support32Bit = true; pulse.enable = true; };
             displayManager.cosmic-greeter.enable = true; desktopManager.cosmic.enable = true;
             blocky = {
