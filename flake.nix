@@ -48,16 +48,16 @@
           };
 
           boot = {
-            consoleLogLevel = 0;
+            consoleLogLevel = 0; plymouth.enable = true;
             kernelPackages = pkgs.linuxPackages_latest;
             lanzaboote = { enable = true; autoEnrollKeys.enable = true; pkiBundle = "/var/lib/sbctl"; };
-            loader = { systemd-boot.enable = lib.mkForce false; timeout = 2; };
+            loader = { systemd-boot.enable = lib.mkForce false; timeout = 0; };
             kernelParams = [ 
               "8250.nr_uarts=0" "i915.force_probe=!7d67" "quiet" "rd.systemd.show_status=false" 
               "rd.tpm2.wait-for-device=1" "tpm_tis.interrupts=0" "usbcore.autosuspend=-1" 
               "xe.force_probe=7d67" "zswap.compressor=zstd" "zswap.enabled=1" "zswap.zpool=zsmalloc" 
             ];
-            kernel.sysctl = { "kernel.nmi_watchdog" = 0; "kernel.split_lock_mitigate" = 0; "vm.max_map_count" = 2147483642; "vm.swappiness" = 100; };
+            kernel.sysctl = { "kernel.split_lock_mitigate" = 0; "vm.max_map_count" = 2147483642; "vm.swappiness" = 100; };
             initrd = {
               systemd.enable = true;
               kernelModules = [ "nvme" "xhci_pci" "usbhid" "tpm_tis" "tpm_crb" ];
@@ -117,7 +117,7 @@
 
           virtualisation = { containers.enable = true; podman = { enable = true; dockerCompat = true; defaultNetwork.settings.dns_enabled = true; }; };
 
-          environment.systemPackages = with pkgs; [ btop git git-remote-gcrypt gnupg pinentry-curses sbctl ];
+          environment.systemPackages = with pkgs; [ git-remote-gcrypt gnupg pinentry-curses sbctl ];
           fonts = { 
             enableDefaultPackages = true; packages = with pkgs; [ jetbrains-mono nerd-fonts.jetbrains-mono ];
             fontconfig.defaultFonts.monospace = [ "JetBrainsMono" ];
@@ -139,7 +139,7 @@
           home-manager.users.nix = { pkgs, ... }: {
             home.stateVersion = "26.05";
             manual = { manpages.enable = false; html.enable = false; json.enable = false; };
-            home.packages = with pkgs; [ atuin carapace fzf helix starship zellij zoxide ];
+            home.packages = with pkgs; [ atuin btop carapace fzf helix starship zellij zoxide ];
             systemd.user.services.kickstart-blocky = {
               Unit = { Description = "One-time Blocky restart on login"; After = [ "graphical-session.target" ]; };
               Service = { Type = "oneshot"; ExecStart = "${pkgs.sudo}/bin/sudo ${pkgs.systemd}/bin/systemctl restart blocky.service"; RemainAfterExit = true; };
