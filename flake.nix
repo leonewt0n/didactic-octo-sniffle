@@ -94,7 +94,7 @@
             tailscale.enable = true; flatpak.enable = true; fwupd.enable = true; tzupdate.enable = true; system76-scheduler.enable = true;
             resolved.enable = false;pipewire = { enable = true; alsa.enable = true; alsa.support32Bit = true; pulse.enable = true; };
             displayManager.cosmic-greeter.enable = true; desktopManager.cosmic.enable = true;
-            unbound = {enable = true;settings = {server = {interface = [ "127.0.0.1" ];access-control = [ "127.0.0.0/8 allow" ];};forward-zone = [{name = ".";forward-tls-upstream = "yes";forward-addr = [
+            unbound = {enable = true;settings = {server = {interface = [ "127.0.0.1" ];prefetch = "yes";access-control = [ "127.0.0.0/8 allow" ];};forward-zone = [{name = ".";forward-tls-upstream = "yes";forward-addr = [
             "1.1.1.1@853#cloudflare-dns.com" "1.0.0.1@853#cloudflare-dns.com"];}];};};
           };
 
