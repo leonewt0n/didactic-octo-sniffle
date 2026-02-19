@@ -7,13 +7,16 @@
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
     home-manager = { url = "github:nix-community/home-manager"; inputs.nixpkgs.follows = "nixpkgs"; };
     impermanence.url = "github:nix-community/impermanence";
+    disko.url = "github:nix-community/disko";
+    disko.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, home-manager, lanzaboote, determinate, impermanence, ... } @ inputs: {
+  outputs = { self, nixpkgs, home-manager, lanzaboote, determinate, disko, impermanence, ... } @ inputs: {
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       specialArgs = { inherit inputs; };
       modules = [
+        disko.nixosModules.disko
         lanzaboote.nixosModules.lanzaboote
         determinate.nixosModules.default
         home-manager.nixosModules.home-manager
@@ -40,7 +43,7 @@
           boot = {
             consoleLogLevel = 0; plymouth.enable = true;
             kernelPackages = pkgs.linuxPackages_latest;
-            lanzaboote = { enable = true; autoEnrollKeys.enable = true; pkiBundle = "/var/lib/sbctl"; };
+            lanzaboote = { enable = true; autoEnrollKeys.enable = true;autoGenerateKeys.enable = true; pkiBundle = "/var/lib/sbctl"; };
             loader = { systemd-boot.enable = lib.mkForce false; timeout = 0; };
             kernelParams = [ 
               "8250.nr_uarts=0" "i915.force_probe=!7d67" "quiet" "rd.systemd.show_status=false" 
@@ -66,7 +69,6 @@
               };
             };
           };
-
           fileSystems = {
             "/" = { fsType = "btrfs"; options = [ "subvol=root" "compress=zstd" ]; };
             "/nix" = { fsType = "btrfs"; options = [ "subvol=nix" "compress=zstd" ]; };
