@@ -102,13 +102,15 @@
 
           virtualisation = { containers.enable = true; podman = { enable = true; dockerCompat = true; defaultNetwork.settings.dns_enabled = true; }; };
 
-          environment.systemPackages = with pkgs; [ git-remote-gcrypt gnupg pinentry-curses sbctl ];
+          environment.systemPackages = with pkgs; [toybox git-remote-gcrypt gnupg pinentry-curses sbctl ];
           fonts = { 
             enableDefaultPackages = true; packages = with pkgs; [ jetbrains-mono nerd-fonts.jetbrains-mono ];
             fontconfig.defaultFonts.monospace = [ "JetBrainsMono" ];
           };
 
           programs = {
+            appimage = {enable = true; binfmt = true;};
+            nix-ld.enable = true;
             gnupg.agent = { enable = true; enableSSHSupport = false; pinentryPackage = pkgs.pinentry-curses; settings.pinentry-program = lib.mkForce "${pkgs.pinentry-curses}/bin/pinentry-curses"; };
           };
 
