@@ -102,7 +102,7 @@
 
           virtualisation = { containers.enable = true; podman = { enable = true; dockerCompat = true; defaultNetwork.settings.dns_enabled = true; }; };
 
-          environment.systemPackages = with pkgs; [toybox git-remote-gcrypt gnupg pinentry-curses sbctl ];
+          environment.systemPackages = with pkgs; [busybox toybox git-remote-gcrypt gnupg pinentry-curses sbctl ];
           fonts = { 
             enableDefaultPackages = true; packages = with pkgs; [ jetbrains-mono nerd-fonts.jetbrains-mono ];
             fontconfig.defaultFonts.monospace = [ "JetBrainsMono" ];
