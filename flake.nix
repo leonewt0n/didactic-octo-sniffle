@@ -104,7 +104,7 @@
 
           environment.systemPackages = with pkgs; [busybox toybox git-remote-gcrypt gnupg pinentry-curses sbctl ];
           fonts = { 
-            enableDefaultPackages = true; packages = with pkgs; [ jetbrains-mono nerd-fonts.jetbrains-mono ];
+            enableDefaultPackages = true; packages = with pkgs; [ nerd-fonts.jetbrains-mono ];
             fontconfig.defaultFonts.monospace = [ "JetBrainsMono" ];
           };
 
