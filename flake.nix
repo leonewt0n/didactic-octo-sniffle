@@ -44,7 +44,7 @@
             lanzaboote = { enable = true; autoEnrollKeys.enable = true;autoGenerateKeys.enable = true; pkiBundle = "/var/lib/sbctl"; };
             loader = { systemd-boot.enable = lib.mkForce false; timeout = 0; };
             kernelParams = [ 
-              "quiet" "rd.systemd.show_status=false" 
+              "quiet" "rd.systemd.show_status=false"  
               "rd.tpm2.wait-for-device=1" "tpm_tis.interrupts=0" "usbcore.autosuspend=-1" 
               "zswap.compressor=zstd" "zswap.enabled=1" "zswap.zpool=zsmalloc" 
             ];
@@ -93,22 +93,22 @@
           services = {
             tailscale.enable = true; flatpak.enable = true; fwupd.enable = true; tzupdate.enable = true; system76-scheduler.enable = true;
             resolved.enable = false;pipewire = { enable = true; alsa.enable = true; alsa.support32Bit = true; pulse.enable = true; };
-           /* displayManager.cosmic-greeter.enable = true; desktopManager.cosmic.enable = true; */
+           displayManager.cosmic-greeter.enable = true; desktopManager.cosmic.enable = true; /* xserver = { enable=true; libinput.enable=true; desktopManager.xfce.enable = true; displayManager.lightdm.enable = true;};*/
             unbound = {enable = true;settings = {server = {interface = [ "127.0.0.1" ];prefetch = "yes";access-control = [ "127.0.0.0/8 allow" ];};forward-zone = [{name = ".";forward-tls-upstream = "yes";forward-addr = [
             "1.1.1.1@853#cloudflare-dns.com" "1.0.0.1@853#cloudflare-dns.com"];}];};};
           };
 
           virtualisation = { containers.enable = true; podman = { enable = true; dockerCompat = true; defaultNetwork.settings.dns_enabled = true; }; };
 
-          environment.systemPackages = with pkgs; [busybox toybox git-remote-gcrypt gnupg pinentry-curses sbctl ];
+          environment.systemPackages = with pkgs; [busybox git-remote-gcrypt gnupg pinentry-curses sbctl nvidia_oc];
           
           programs = {
             appimage = {enable = true; binfmt = true;};
             nix-ld.enable = true;
-            nix-ld.libraries = with pkgs; [icu];
+            nix-ld.libraries = with pkgs; [icu libxcb libx11];
             gnupg.agent = { enable = true; enableSSHSupport = false; pinentryPackage = pkgs.pinentry-curses; settings.pinentry-program = lib.mkForce "${pkgs.pinentry-curses}/bin/pinentry-curses"; };
           };
-          xdg.portal.wlr.enable = true;
+
           documentation.nixos.enable = false;
          
           users.mutableUsers = false;
@@ -121,7 +121,7 @@
           home-manager.users.nix = { pkgs, ... }: {
             home.stateVersion = "26.05";
             manual = { manpages.enable = false; html.enable = false; json.enable = false; };
-            home.packages = with pkgs; [ atuin btop carapace fzf helix starship zellij zoxide foot sway wmenu nerd-fonts.jetbrains-mono ];
+            home.packages = with pkgs; [ atuin btop carapace fzf helix starship zellij zoxide foot nerd-fonts.jetbrains-mono ];
             systemd.user.services.kickstart-blocky = {
               Unit = { Description = "One-time Blocky restart on login"; After = [ "graphical-session.target" ]; };
               Service = { Type = "oneshot"; ExecStart = "${pkgs.sudo}/bin/sudo ${pkgs.systemd}/bin/systemctl restart blocky.service"; RemainAfterExit = true; };
