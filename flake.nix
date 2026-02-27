@@ -24,7 +24,7 @@
         {
           home-manager = { useGlobalPkgs = true; useUserPackages = true; extraSpecialArgs = { inherit inputs; }; };
         }
-        ({ pkgs, lib, ... }: {
+        ({ config, pkgs, lib, ... }: {
           imports = [ ./hardware-configuration.nix ];
           system.stateVersion = "26.05";
           nixpkgs.config.allowUnfree = true;
@@ -32,8 +32,7 @@
           nix.settings = { auto-optimise-store = true; eval-cores = 0; http-connections = 50; max-jobs = "auto"; };
 
           hardware = {
-            nvidia.open = true;
-            nvidia.package = "config.boot.kernelPackages.nvidiaPackages.vulkan_beta";
+            nvidia = {open = false; modesetting.enable = true;package = config.boot.kernelPackages.nvidiaPackages.latest;};
             #nvidia-container-toolkit.enable = true; 
             enableAllFirmware = true;
             cpu.intel.updateMicrocode = true;};
@@ -91,7 +90,7 @@
           security.pam.u2f = { enable = true; control = "sufficient"; settings.cue = true; };
 
           services = {
-            tailscale.enable = true; flatpak.enable = true; fwupd.enable = true; tzupdate.enable = true; system76-scheduler.enable = true;
+            xserver.videoDrivers = ["nvidia"]; tailscale.enable = true; flatpak.enable = true; fwupd.enable = true; tzupdate.enable = true; system76-scheduler.enable = true;
             resolved.enable = false;pipewire = { enable = true; alsa.enable = true; alsa.support32Bit = true; pulse.enable = true; };
            displayManager.cosmic-greeter.enable = true; desktopManager.cosmic.enable = true; /* xserver = { enable=true; libinput.enable=true; desktopManager.xfce.enable = true; displayManager.lightdm.enable = true;};*/
             unbound = {enable = true;settings = {server = {interface = [ "127.0.0.1" ];prefetch = "yes";access-control = [ "127.0.0.0/8 allow" ];};forward-zone = [{name = ".";forward-tls-upstream = "yes";forward-addr = [
