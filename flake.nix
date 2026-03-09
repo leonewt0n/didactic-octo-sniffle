@@ -33,7 +33,7 @@
 
           hardware = {
             nvidia = {open = true; gsp.enable = true; modesetting.enable = true;package = config.boot.kernelPackages.nvidiaPackages.stable;};
-            #nvidia-container-toolkit.enable = true;
+            nvidia-container-toolkit.enable = true;
             graphics = {enable = true; enable32Bit= true;};
             enableAllFirmware = true;
             cpu.intel.updateMicrocode = true;};
@@ -42,11 +42,12 @@
             consoleLogLevel = 0; plymouth.enable = true;
            # kernelPackages = pkgs.linuxPackages_latest;
             lanzaboote = { enable = true; autoEnrollKeys.enable = true;autoGenerateKeys.enable = true; pkiBundle = "/var/lib/sbctl"; };
-            loader = { systemd-boot.enable = lib.mkForce false; timeout = 0; };
+            loader = { systemd-boot.configurationLimit = 5;systemd-boot.enable = lib.mkForce false; timeout = 0; };
+            kernelModules = ["st" "sg" "vfio_pci" "vfio" "vfio_iommu_type1"] ;
             kernelParams = [ 
               "quiet" "rd.systemd.show_status=false"  
               "rd.tpm2.wait-for-device=1" "tpm_tis.interrupts=0" "usbcore.autosuspend=-1" 
-              "zswap.compressor=zstd" "zswap.enabled=1" "zswap.zpool=zsmalloc" 
+              "zswap.compressor=zstd" "zswap.enabled=1" "zswap.zpool=zsmalloc" "intel_iommu=on" "iommu=pt"
             ];
             kernel.sysctl = { "kernel.split_lock_mitigate" = 0; "vm.max_map_count" = 2147483642; "vm.swappiness" = 100; };
             initrd = {
@@ -92,7 +93,7 @@
           security.pam.u2f = { enable = true; control = "sufficient"; settings.cue = true; };
 
           services = {
-            xserver.videoDrivers = ["nvidia"];tailscale.enable = true; flatpak.enable = true; fwupd.enable = true; tzupdate.enable = true; system76-scheduler.enable = true;
+            xserver.videoDrivers =["nvidia"];tailscale.enable = true; flatpak.enable = true; fwupd.enable = true; tzupdate.enable = true; system76-scheduler.enable = true;
             resolved.enable = false;pipewire = { enable = true; alsa.enable = true; alsa.support32Bit = true; pulse.enable = true; };
            displayManager.cosmic-greeter.enable = true; desktopManager.cosmic.enable = true; /* xserver = { enable=true; libinput.enable=true; desktopManager.xfce.enable = true; displayManager.lightdm.enable = true;};*/
             unbound = {enable = true;settings = {server = {interface = [ "127.0.0.1" ];prefetch = "yes";access-control = [ "127.0.0.0/8 allow" ];};forward-zone = [{name = ".";forward-tls-upstream = "yes";forward-addr = [
@@ -101,7 +102,7 @@
           
           virtualisation = { containers.enable = true; podman = { enable = true; dockerCompat = true; defaultNetwork.settings.dns_enabled = true; }; };
 
-          environment.systemPackages = with pkgs; [busybox git-remote-gcrypt gnupg pinentry-curses vulkan-loader vulkan-tools vulkan-validation-layers sbctl nvidia_oc];
+          environment.systemPackages = with pkgs; [busybox  mt-st hpe-ltfs lsscsi sg3_utils git-remote-gcrypt gnupg pinentry-curses vulkan-loader vulkan-tools vulkan-validation-layers sbctl nvidia_oc];
           #environment.variables = {GBM_BACKEND = "nvidia-drm";LIBVA_DRIVER_NAME = "nvidia";__GLX_VENDOR_LIBRARY_NAME = "nvidia";};
           programs = {
             appimage = {enable = true; binfmt = true;};
@@ -115,7 +116,7 @@
           users.mutableUsers = false;
           users.users.root.hashedPassword = "!";
           users.users.nix = {
-            isNormalUser = true; shell = pkgs.nushell; description = "nix user"; extraGroups = [ "wheel" "video" "render" "seat" "audio" ];
+            isNormalUser = true; shell = pkgs.nushell; description = "nix user"; extraGroups = [ "wheel" "tape" "video" "render" "seat" "audio" ];
             hashedPassword = "$6$FA0MUKHblWK2Ym8O$aQx3otoJ2hYTDA2kyfhEdPFm5gJQgg/LUJ3GBOmr4/A2MtTwPUWd/ZlFlutCInhN7s7T/51fwWRGiJiM07R2r1";
           };
 
