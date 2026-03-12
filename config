@@ -1,7 +1,9 @@
 # Default config for sway
 #
 # Copy this to ~/.config/sway/config and edit it to your liking.
-#
+# Logo key. Use Mod1 for Alt.
+set $mod Mod4
+
 # Read `man 5 sway` for a complete reference.
 # Sets Audio to 100% and removes borders
 for_window [class=".*"] border none
@@ -9,10 +11,10 @@ default_border none
 default_floating_border none
 workspace 10 output HDMI-A-1
 exec_always  wpctl set-volume @DEFAULT_AUDIO_SINK@ 1.0
+exec rm -f /tmp/sovpipe && mkfifo /tmp/sovpipe && tail -f /tmp/sovpipe | sov
+bindsym --no-repeat $mod+Tab exec "echo 1 > /tmp/sovpipe"
+bindsym --release $mod+Tab exec "echo 0 > /tmp/sovpipe"
 ### Variables
-#
-# Logo key. Use Mod1 for Alt.
-set $mod Mod4
 # Home row direction keys, like vim
 set $left h
 set $down j

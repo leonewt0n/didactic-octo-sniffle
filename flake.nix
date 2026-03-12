@@ -124,7 +124,7 @@
           home-manager.users.nix = { pkgs, ... }: {
             home.stateVersion = "26.05";
             manual = { manpages.enable = false; html.enable = false; json.enable = false; };
-            home.packages = with pkgs; [ atuin btop carapace fzf helix starship zellij zoxide foot nerd-fonts.jetbrains-mono ];
+            home.packages = with pkgs; [ atuin btop carapace fzf helix starship zellij zoxide foot nerd-fonts.jetbrains-mono sov ];
             home.persistence."/persistent" = {
               directories = [ 
                 ".config" ".gnupg" ".local/share"  ".ssh"  ".var" "ROMs" "Archive" "Documents" "Downloads" "DOS" "git" "obsidianVault" "Pictures" "Videos" 
