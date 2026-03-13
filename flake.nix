@@ -7,11 +7,12 @@
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
     home-manager = { url = "github:nix-community/home-manager"; inputs.nixpkgs.follows = "nixpkgs"; };
     impermanence.url = "github:nix-community/impermanence";
+    nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=latest";
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, home-manager, lanzaboote, determinate, disko, impermanence, ... } @ inputs: {
+  outputs = { self, nixpkgs, home-manager, lanzaboote, determinate, disko, impermanence,nix-flatpak, ... } @ inputs: {
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       specialArgs = { inherit inputs; };
@@ -21,6 +22,7 @@
         determinate.nixosModules.default
         home-manager.nixosModules.home-manager
         impermanence.nixosModules.impermanence
+        nix-flatpak.nixosModules.nix-flatpak
         {
           home-manager = { useGlobalPkgs = true; useUserPackages = true; extraSpecialArgs = { inherit inputs; }; };
         }
@@ -95,7 +97,7 @@
           security.pam.u2f = { enable = true; control = "sufficient"; settings.cue = true; };
 
           services = {
-            xserver.videoDrivers =["nvidia"]; tailscale.enable = true; flatpak.enable = true; fwupd.enable = true; tzupdate.enable = true;
+            xserver.videoDrivers =["nvidia"]; tailscale.enable = true; flatpak.enable = true;flatpak.update.onActivation = true;  fwupd.enable = true; tzupdate.enable = true;
            pipewire = { enable = true; alsa.enable = true; alsa.support32Bit = true; pulse.enable = true; }; resolved.enable =true;
            /*displayManager.cosmic-greeter.enable = true; desktopManager.cosmic.enable = true;*/ system76-scheduler.enable = true; /* xserver = { enable=true; libinput.enable=true; desktopManager.xfce.enable = true; displayManager.lightdm.enable = true;};*/
                       };
