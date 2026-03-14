@@ -107,7 +107,7 @@
           };
           virtualisation = { containers.enable = true; podman = { enable = true; dockerCompat = true; defaultNetwork.settings.dns_enabled = true; }; };
 
-          environment.systemPackages = with pkgs; [busybox toybox mt-st hpe-ltfs lsscsi sg3_utils git-remote-gcrypt gnupg pinentry-curses vulkan-loader vulkan-tools vulkan-validation-layers sbctl nvidia_oc];
+          environment.systemPackages = with pkgs; [busybox toybox jq mt-st hpe-ltfs lsscsi sg3_utils git-remote-gcrypt gnupg pinentry-curses vulkan-loader vulkan-tools vulkan-validation-layers sbctl nvidia_oc];
           programs = {
             appimage = {enable = true; binfmt = true;};
             nix-ld.enable = true;
