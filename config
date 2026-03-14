@@ -9,14 +9,14 @@ set $mod Mod4
 for_window [class=".*"] border none
 default_border none
 default_floating_border none
-workspace 1 output HDMI-A-1
-workspace 2 output DP-2
+workspace 9 output HDMI-A-1
+workspace 1 output DP-2
 exec_always  wpctl set-volume @DEFAULT_AUDIO_SINK@ 1.0
 #exec rm -f /tmp/sovpipe && mkfifo /tmp/sovpipe && tail -f /tmp/sovpipe | sov
 #bindsym --no-repeat $mod+Tab exec "echo 1 > /tmp/sovpipe"
 #bindsym --release $mod+Tab exec "echo 0 > /tmp/sovpipe"
 #assign [sandbox_app_id="com.usebottles.bottles"] workspace 9
-for_window [sandbox_app_id="com.usebottles.bottles"] move container to workspace 1
+#for_window [sandbox_app_id="com.usebottles.bottles"] move container to workspace 1
 ### Variables
 # Home row direction keys, like vim
 set $left h
@@ -35,8 +35,10 @@ output * bg /run/current-system/sw/share/backgrounds/sway/Sway_Wallpaper_Blue_19
 #
 # Example configuration:
 #
-output HDMI-A-1 pos 0 3840 res 3840x2160@120Hz adaptive_sync on allow_tearing yes enable
-output DP-2 pos 3840 0 res 1920x1080 enable
+output HDMI-A-1 pos 0 3840 res 3840x2160@120Hz  adaptive_sync on allow_tearing yes enable
+output DP-2 pos 3840 0  enable
+#exec xrandr --output HDMI-A-1 --primary
+#3840x2160@120Hz 
 #
 # You can get the names of your outputs by running: swaymsg -t get_outputs
 ### Key bindings

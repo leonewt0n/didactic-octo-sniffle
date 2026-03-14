@@ -34,7 +34,7 @@
           nix.settings = { auto-optimise-store = true; eval-cores = 0; http-connections = 50; max-jobs = "auto"; };
 
           hardware = {
-            nvidia = {open = true; gsp.enable = true; nvidiaPersistenced = true; modesetting.enable = true;package = config.boot.kernelPackages.nvidiaPackages.stable;nvidiaSettings = true;powerManagement.enable = true; dynamicBoost.enable = true; };
+            nvidia = {open = true; gsp.enable = true; nvidiaPersistenced = true; modesetting.enable = true;package = config.boot.kernelPackages.nvidiaPackages.stable; };
             nvidia-container-toolkit.enable = true;
             graphics = {enable = true; enable32Bit= true;};
             enableAllFirmware = true;
@@ -124,7 +124,7 @@
   
          serviceConfig = {
          Type = "oneshot"; # Since it sets a value and exits, 'oneshot' is better than 'simple'
-         ExecStart = "${pkgs.nvidia_oc}/bin/nvidia_oc set --index 0 --power-limit 300000 --freq-offset 299 --mem-offset 2000";
+         ExecStart = "${pkgs.nvidia_oc}/bin/nvidia_oc set --index 0 --power-limit 300000 --freq-offset 400 --mem-offset 2800";
          User = "root";
          RemainAfterExit = true;
            };
