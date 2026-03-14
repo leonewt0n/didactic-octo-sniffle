@@ -34,7 +34,7 @@
           nix.settings = { auto-optimise-store = true; eval-cores = 0; http-connections = 50; max-jobs = "auto"; };
 
           hardware = {
-            nvidia = {open = true; gsp.enable = true; modesetting.enable = true;package = config.boot.kernelPackages.nvidiaPackages.stable;powerManagement.enable = true; dynamicBoost.enable = true; };
+            nvidia = {open = true; gsp.enable = true; nvidiaPersistenced = true; modesetting.enable = true;package = config.boot.kernelPackages.nvidiaPackages.stable;nvidiaSettings = true;powerManagement.enable = true; dynamicBoost.enable = true; };
             nvidia-container-toolkit.enable = true;
             graphics = {enable = true; enable32Bit= true;};
             enableAllFirmware = true;
@@ -98,8 +98,7 @@
 
           services = {
             xserver.videoDrivers =["nvidia"]; tailscale.enable = true; flatpak.enable = true;flatpak.update.onActivation = true;  fwupd.enable = true; tzupdate.enable = true;
-           pipewire = { enable = true; alsa.enable = true; alsa.support32Bit = true; pulse.enable = true; }; resolved.enable =true;
-           /*displayManager.cosmic-greeter.enable = true; desktopManager.cosmic.enable = true;*/ system76-scheduler.enable = true; /* xserver = { enable=true; libinput.enable=true; desktopManager.xfce.enable = true; displayManager.lightdm.enable = true;};*/
+           pipewire = { enable = true; alsa.enable = true; alsa.support32Bit = true; pulse.enable = true; }; resolved.enable =true;system76-scheduler.enable = true; 
                       };
           xdg.portal = {
             enable = true;
@@ -109,7 +108,6 @@
           virtualisation = { containers.enable = true; podman = { enable = true; dockerCompat = true; defaultNetwork.settings.dns_enabled = true; }; };
 
           environment.systemPackages = with pkgs; [busybox toybox mt-st hpe-ltfs lsscsi sg3_utils git-remote-gcrypt gnupg pinentry-curses vulkan-loader vulkan-tools vulkan-validation-layers sbctl nvidia_oc];
-          #environment.variables = {GBM_BACKEND = "nvidia-drm";LIBVA_DRIVER_NAME = "nvidia";__GLX_VENDOR_LIBRARY_NAME = "nvidia";};
           programs = {
             appimage = {enable = true; binfmt = true;};
             nix-ld.enable = true;
@@ -119,7 +117,18 @@
           };
          
           documentation.nixos.enable = false;
-         
+          systemd.services.nvidia-overclock = {
+          description = "NVIDIA Overclocking Service";
+          after = [ "network.target" "display-manager.service" ]; # Added display-manager to ensure drivers are loaded
+          wantedBy = [ "multi-user.target" ];
+  
+         serviceConfig = {
+         Type = "oneshot"; # Since it sets a value and exits, 'oneshot' is better than 'simple'
+         ExecStart = "${pkgs.nvidia_oc}/bin/nvidia_oc set --index 0 --power-limit 300000 --freq-offset 299 --mem-offset 2000";
+         User = "root";
+         RemainAfterExit = true;
+           };
+         };
           users.mutableUsers = false;
           users.users.root.hashedPassword = "!";
           users.users.nix = {

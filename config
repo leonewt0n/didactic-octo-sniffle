@@ -9,13 +9,14 @@ set $mod Mod4
 for_window [class=".*"] border none
 default_border none
 default_floating_border none
-workspace 9 output HDMI-A-1
+workspace 1 output HDMI-A-1
+workspace 2 output DP-2
 exec_always  wpctl set-volume @DEFAULT_AUDIO_SINK@ 1.0
 #exec rm -f /tmp/sovpipe && mkfifo /tmp/sovpipe && tail -f /tmp/sovpipe | sov
 #bindsym --no-repeat $mod+Tab exec "echo 1 > /tmp/sovpipe"
 #bindsym --release $mod+Tab exec "echo 0 > /tmp/sovpipe"
 #assign [sandbox_app_id="com.usebottles.bottles"] workspace 9
-for_window [sandbox_app_id="com.usebottles.bottles"] move container to workspace 9
+for_window [sandbox_app_id="com.usebottles.bottles"] move container to workspace 1
 ### Variables
 # Home row direction keys, like vim
 set $left h
