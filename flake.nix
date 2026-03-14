@@ -47,7 +47,7 @@
             loader = { systemd-boot.configurationLimit = 5;systemd-boot.enable = lib.mkForce false; timeout = 0; };
             kernelModules = ["st" "sg" "vfio_pci" "vfio" "vfio_iommu_type1"] ;
             kernelParams = [ 
-              "quiet" "rd.systemd.show_status=false"  
+              "quiet" "rd.systemd.show_status=false" "preempt=full" 
               "rd.tpm2.wait-for-device=1" "tpm_tis.interrupts=0" "usbcore.autosuspend=-1" 
               "zswap.compressor=zstd" "zswap.enabled=1" "zswap.zpool=zsmalloc" "intel_iommu=on" "iommu=pt"
             ];
@@ -111,7 +111,7 @@
           programs = {
             appimage = {enable = true; binfmt = true;};
             nix-ld.enable = true;
-            nix-ld.libraries = with pkgs; [icu libxcb libx11 libGL libXcursor libXext xinput libXi];
+            nix-ld.libraries = with pkgs; [icu libxcb libx11 libGL libXcursor libXext xinput libXi zlib stdenv.cc.cc.lib];
             gnupg.agent = { enable = true; enableSSHSupport = false; pinentryPackage = pkgs.pinentry-curses; settings.pinentry-program = lib.mkForce "${pkgs.pinentry-curses}/bin/pinentry-curses"; };
             sway = {enable = true;wrapperFeatures.gtk = true; extraPackages = with pkgs; [foot wofi ];};
           };
@@ -160,7 +160,7 @@
                 enable = true;
                 configFile.text = ''
                   $env.config = { show_banner: false, edit_mode: vi }
-                  def update [] { sudo cp -r ~/git/nixos/* /etc/nixos/; sudo nix flake update --flake /etc/nixos/; sudo nixos-rebuild switch --flake /etc/nixos/ }
+                  def update [] { sudo nix flake update --flake ~/git/nixos/; sudo nixos-rebuild switch --flake ~/git/nixos/ }
                   def push [msg?: string] {
                     $env.GPG_TTY = (tty); gpg-connect-agent updatestartuptty /bye | ignore; git add -A
                     let m = if ($msg | is-empty) { (date now | format date '%Y-%m-%d %H:%M:%S') } else { $msg }; git commit -m $m; git push
